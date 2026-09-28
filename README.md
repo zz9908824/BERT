@@ -102,3 +102,7 @@ Bert结构先是encode然后分两支MLM和NSP，通过损失反向传播训练�
 （6）NSP后来为什么被RoBERTa删除
 
 RoBERTa通过消融实验发现，在其训练配置下移除NSP，模型性能可以持平或提高，说明原始NSP并不是获得强语言表示必不可少的预训练目标。
+
+一条文本是如何从字符串进入bert最终变成分类结果的：
+一条文本首先经过 tokenizer，被切分为 token，并转换为 input_ids、token_type_ids 和attention_mask。BERT 将 token embedding、position embedding 和 segment embedding 相加，得到输入向量，然后送入多层 Transformer Encoder。在没有 causal mask 的情况下，每个有效 token 都可以与左右上下文中的其他有效 token 进行信息交互，从而获得深层双向上下文化表示。
+MLM 和 NSP 是原始 BERT 预训练阶段使用的任务，它们帮助 BERT 学习通用语言表示；进行文本分类时不需要重新执行 MLM 和 NSP。[CLS] 的最终隐藏状态融合了整段输入的上下文信息，并通过训练被优化为句级任务的汇总表示。，分类模型通常取最后一层 [CLS] 对应的隐藏状态作为句级表示，经过 Dropout 和全连接分类层得到 [B,C] 的 logits。训练时，分类损失会通过反向传播同时更新分类层和 BERT 参数；推理时选择 logits 最大的类别作为分类结果。
